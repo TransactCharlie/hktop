@@ -4,13 +4,22 @@ import (
 	ui "github.com/gizak/termui/widgets"
 )
 
-type ExampleWidget struct {
+type ExampleParagraph struct {
 	*ui.Paragraph
 }
 
-func NewExampleWidget() *ExampleWidget {
-	p := &ExampleWidget{Paragraph : ui.NewParagraph()}
+func NewExampleParagraph() *ExampleParagraph {
+	p := &ExampleParagraph{Paragraph : ui.NewParagraph()}
 	p.Text = "Hello World"
-	p.Paragraph.Text = "foooooo"
+	return p
+}
+
+type ExamplePie struct {
+	*ui.PieChart
+}
+
+func NewExamplePie() *ExamplePie {
+	p := &ExamplePie{PieChart: ui.NewPieChart()}
+	p.Data = []float64{10, 1, 15}
 	return p
 }

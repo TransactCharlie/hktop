@@ -12,22 +12,24 @@ import (
 
 var (
 	grid *ui.Grid
-	exampleWidget *w.ExampleWidget
+	exampleParagraphWidget *w.ExampleParagraph
+	examplePieWidget *w.ExamplePie
 	updateInterval = time.Second
 )
 
 func initWidgets() {
-	exampleWidget = w.NewExampleWidget()
+	exampleParagraphWidget = w.NewExampleParagraph()
+	examplePieWidget = w.NewExamplePie()
 }
 
 
 func setupGrid() {
 	grid = ui.NewGrid()
 	grid.Set(
-		ui.NewRow(1.0/2, exampleWidget),
+		ui.NewRow(1.0/2, exampleParagraphWidget),
 		ui.NewRow(1.0/2,
-			ui.NewCol(1.0/2, exampleWidget),
-			ui.NewCol(1.0/2, exampleWidget),
+			ui.NewCol(1.0/2, examplePieWidget),
+			ui.NewCol(1.0/2, examplePieWidget),
 		),
 	)
 }
