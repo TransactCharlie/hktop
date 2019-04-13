@@ -1,7 +1,7 @@
 package main
 
 import (
-	ui "github.com/gizak/termui"
+	ui "github.com/gizak/termui/v3"
 	w "github.com/transactcharlie/hktop/src/widgets"
 	"os"
 	"os/signal"

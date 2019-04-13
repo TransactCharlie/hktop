@@ -1,7 +1,7 @@
 package widgets
 
 import (
-	ui "github.com/gizak/termui/widgets"
+	ui "github.com/gizak/termui/v3/widgets"
 )
 
 type ExampleParagraph struct {
