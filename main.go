@@ -52,7 +52,7 @@ func eventLoop() {
 			ui.Render(grid)
 		case e := <-uiEvents:
 			switch e.ID {
-			case "k", "<C-c>":
+			case "q", "<C-c>":
 				return
 			case "<Resize>":
 				payload := e.Payload.(ui.Resize)
