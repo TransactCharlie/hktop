@@ -5,18 +5,47 @@ import (
 	"k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"time"
 )
 
 type KubernetesPods struct {
 	*ui.List
 	clientset *kubernetes.Clientset
+	updateTick <-chan time.Time
+	stop chan bool
 }
 
+func (kn *KubernetesPods) Run() {
+	go func() {
+		for {
+			select {
+			case <- kn.stop:
+				return
+			case <- kn.updateTick:
+				_ = kn.Update()
+			}
+		}
+	}()
+
+}
+
+func (kn *KubernetesPods) Stop() bool {
+	kn.stop <- true
+	return true
+}
+
+
 func NewKubernetesPods(clientset *kubernetes.Clientset) *KubernetesPods {
-	kn := &KubernetesPods{List: ui.NewList(), clientset: clientset}
+	kn := &KubernetesPods{
+		List: ui.NewList(),
+		clientset: clientset,
+		updateTick: time.NewTicker(time.Second * 10).C,
+		stop: make(chan bool),
+	}
 	kn.Rows = []string{}
 	kn.Title = "K8S Pods"
-
+	go func() {_ = kn.Update()}()
+	kn.Run()
 	return kn
 }
 
@@ -25,7 +54,7 @@ func (kn *KubernetesPods) K8SPods() (*v1.PodList, error) {
 	return pods, err
 }
 
-func (kn *KubernetesPods) UpdatePodsList() error {
+func (kn *KubernetesPods) Update() error {
 	pods, err := kn.K8SPods()
 	if err != nil {
 		return err

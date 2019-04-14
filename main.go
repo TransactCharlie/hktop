@@ -17,17 +17,15 @@ import (
 
 var (
 	grid *ui.Grid
-	exampleParagraphWidget *w.ExampleParagraph
-	examplePieWidget *w.ExamplePie
-	k8sNodesWidget *w.KubernetesNodes
-	k8sPodsWidget *w.KubernetesPods
+	exampleParagraphWidget w.K8SWidget
+	k8sNodesWidget w.K8SWidget
+	k8sPodsWidget w.K8SWidget
 	updateInterval = time.Second
 	clientset *kubernetes.Clientset
 )
 
 func initWidgets() {
 	exampleParagraphWidget = w.NewExampleParagraph()
-	examplePieWidget = w.NewExamplePie()
 	k8sNodesWidget = w.NewKubernetesNode(clientset)
 	k8sPodsWidget = w.NewKubernetesPods(clientset)
 }
@@ -47,7 +45,6 @@ func setupGrid() {
 
 func eventLoop() {
 	drawTicker := time.NewTicker(updateInterval).C
-	stateTicker := time.NewTicker(updateInterval).C
 
 	// handles kill signal
 	sigTerm := make(chan os.Signal, 2)
@@ -59,9 +56,6 @@ func eventLoop() {
 		select {
 		case <-sigTerm:
 			return
-		case <-stateTicker:
-			_ = k8sNodesWidget.UpdateNodeList()
-			_ = k8sPodsWidget.UpdatePodsList()
 		case <-drawTicker:
 			ui.Render(grid)
 		case e := <-uiEvents:

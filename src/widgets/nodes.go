@@ -5,27 +5,49 @@ import (
 	"k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"time"
 )
 
 type KubernetesNodes struct {
 	*ui.List
 	clientset *kubernetes.Clientset
+	updateTick <-chan time.Time
+	stop chan bool
 }
 
 func NewKubernetesNode(clientset *kubernetes.Clientset) *KubernetesNodes {
-	kn := &KubernetesNodes{List: ui.NewList(), clientset: clientset}
+	kn := &KubernetesNodes{
+		List: ui.NewList(),
+		clientset: clientset,
+		updateTick: time.NewTicker(time.Second * 10).C,
+		stop: make(chan bool),
+	}
 	kn.Rows = []string{}
 	kn.Title = "K8S Nodes"
-
+	go func() {_ = kn.Update()}()
+	kn.Run()
 	return kn
 }
 
-func (kn *KubernetesNodes) K8SNodes() (*v1.NodeList, error) {
-	nodes, err := kn.clientset.CoreV1().Nodes().List(metav1.ListOptions{})
-	return nodes, err
+func (kn *KubernetesNodes) Run() {
+	go func() {
+		for {
+			select {
+			case <- kn.stop:
+				return
+			case <- kn.updateTick:
+				_ = kn.Update()
+			}
+		}
+	}()
 }
 
-func (kn *KubernetesNodes) UpdateNodeList() error {
+func (kn *KubernetesNodes) Stop() bool {
+	kn.stop <- true
+	return true
+}
+
+func (kn *KubernetesNodes) Update() error {
 	nodes, err := kn.K8SNodes()
 	if err != nil {
 		return err
@@ -37,4 +59,9 @@ func (kn *KubernetesNodes) UpdateNodeList() error {
 	}
 	kn.Rows = newRows
 	return nil
+}
+
+func (kn *KubernetesNodes) K8SNodes() (*v1.NodeList, error) {
+	nodes, err := kn.clientset.CoreV1().Nodes().List(metav1.ListOptions{})
+	return nodes, err
 }

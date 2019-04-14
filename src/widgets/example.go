@@ -8,18 +8,12 @@ type ExampleParagraph struct {
 	*ui.Paragraph
 }
 
+func (ep ExampleParagraph) Run() {}
+func (ep ExampleParagraph) Stop() bool     {return true}
+func (ep ExampleParagraph) Update() error  {return nil}
+
 func NewExampleParagraph() *ExampleParagraph {
 	p := &ExampleParagraph{Paragraph : ui.NewParagraph()}
 	p.Text = "Hello World"
-	return p
-}
-
-type ExamplePie struct {
-	*ui.PieChart
-}
-
-func NewExamplePie() *ExamplePie {
-	p := &ExamplePie{PieChart: ui.NewPieChart()}
-	p.Data = []float64{10, 1, 15}
 	return p
 }
