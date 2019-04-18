@@ -5,6 +5,8 @@ import (
 	"k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	watch "k8s.io/apimachinery/pkg/watch"
+	"log"
 	"time"
 )
 
@@ -12,6 +14,7 @@ type KubernetesNodes struct {
 	*ui.List
 	clientset *kubernetes.Clientset
 	updateTick <-chan time.Time
+	nodeWatch <-chan watch.Event
 	stop chan bool
 }
 
@@ -20,6 +23,7 @@ func NewKubernetesNode(clientset *kubernetes.Clientset) *KubernetesNodes {
 		List: ui.NewList(),
 		clientset: clientset,
 		updateTick: time.NewTicker(time.Second * 10).C,
+		nodeWatch: createNodeWatch(clientset),
 		stop: make(chan bool),
 	}
 	kn.Rows = []string{}
@@ -27,6 +31,14 @@ func NewKubernetesNode(clientset *kubernetes.Clientset) *KubernetesNodes {
 	go func() {_ = kn.Update()}()
 	kn.Run()
 	return kn
+}
+
+func createNodeWatch(clientset *kubernetes.Clientset) <-chan watch.Event {
+	watcher, err := clientset.CoreV1().Nodes().Watch(metav1.ListOptions{})
+	if err != nil {
+		log.Fatal(err)
+	}
+	return watcher.ResultChan()
 }
 
 func (kn *KubernetesNodes) Run() {
@@ -37,6 +49,8 @@ func (kn *KubernetesNodes) Run() {
 				return
 			case <- kn.updateTick:
 				_ = kn.Update()
+			case _ = <- kn.nodeWatch:
+				continue
 			}
 		}
 	}()
