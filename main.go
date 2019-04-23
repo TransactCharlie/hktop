@@ -2,26 +2,27 @@ package main
 
 import (
 	"flag"
-	ui "github.com/gizak/termui/v3"
-	w "github.com/transactcharlie/hktop/src/widgets"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/homedir"
+	"log"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"syscall"
 	"time"
-	"log"
+
+	ui "github.com/gizak/termui/v3"
+	w "github.com/transactcharlie/hktop/src/widgets"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
 )
 
 var (
-	grid *ui.Grid
+	grid                   *ui.Grid
 	exampleParagraphWidget w.K8SWidget
-	k8sNodesWidget w.K8SWidget
-	k8sPodsWidget w.K8SWidget
-	updateInterval = time.Second
-	clientset *kubernetes.Clientset
+	k8sNodesWidget         w.K8SWidget
+	k8sPodsWidget          w.K8SWidget
+	updateInterval         = time.Second
+	clientset              *kubernetes.Clientset
 )
 
 func initWidgets() {
@@ -30,18 +31,16 @@ func initWidgets() {
 	k8sPodsWidget = w.NewKubernetesPods(clientset)
 }
 
-
 func setupGrid() {
 	grid = ui.NewGrid()
 	grid.Set(
-		ui.NewRow(1.0/2, exampleParagraphWidget),
-		ui.NewRow(1.0/2,
+		ui.NewRow(0.5/2, exampleParagraphWidget),
+		ui.NewRow(1.5/2,
 			ui.NewCol(1.0/2, k8sNodesWidget),
 			ui.NewCol(1.0/2, k8sPodsWidget),
 		),
 	)
 }
-
 
 func eventLoop() {
 	drawTicker := time.NewTicker(updateInterval).C
@@ -66,7 +65,7 @@ func eventLoop() {
 				payload := e.Payload.(ui.Resize)
 				grid.SetRect(0, 0, payload.Width, payload.Height)
 				ui.Clear()
-				ui.Render()
+				ui.Render(grid)
 			}
 		}
 	}
@@ -94,7 +93,6 @@ func main() {
 	if err := ui.Init(); err != nil {
 		log.Fatalf("failed to initialize termui: %v", err)
 	}
-
 
 	defer ui.Close()
 	initWidgets()
