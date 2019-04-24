@@ -14,6 +14,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
+	p "github.com/transactcharlie/hktop/src/providers"
 )
 
 var (
@@ -23,12 +24,19 @@ var (
 	k8sPodsWidget          w.K8SWidget
 	updateInterval         = time.Second
 	clientset              *kubernetes.Clientset
+	nodeProvider		   *p.WatchObserver
+	podProvider *p.WatchObserver
 )
 
 func initWidgets() {
 	exampleParagraphWidget = w.NewExampleParagraph()
-	k8sNodesWidget = w.NewKubernetesNode(clientset)
-	k8sPodsWidget = w.NewKubernetesPods(clientset)
+	k8sNodesWidget = w.NewKubernetesNode(nodeProvider)
+	k8sPodsWidget = w.NewKubernetesPods(podProvider)
+}
+
+func initProviders() {
+	nodeProvider = p.NewNodeObserver(clientset)
+	podProvider = p.NewPodObserver(clientset)
 }
 
 func setupGrid() {
@@ -95,6 +103,7 @@ func main() {
 	}
 
 	defer ui.Close()
+	initProviders()
 	initWidgets()
 	setupGrid()
 	termWidth, termHeight := ui.TerminalDimensions()
