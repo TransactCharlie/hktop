@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"k8s.io/client-go/util/homedir"
 	"log"
 	"os"
 	"os/signal"
@@ -14,7 +15,6 @@ import (
 	w "github.com/transactcharlie/hktop/src/widgets"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/homedir"
 )
 
 var (
@@ -24,30 +24,32 @@ var (
 	nodeListWidget         w.K8SWidget
 	podListWidget          w.K8SWidget
 	updateInterval         time.Duration = time.Second
-	k8sClientSet           *kubernetes.Clientset
-	nodeObserver           *p.WatchObserver
-	podObserver            *p.WatchObserver
-	deploymentObserver     *p.WatchObserver
-	serviceObserver        *p.WatchObserver
+	// k8sClientSet           *kubernetes.Clientset
+	nodeProvider           *p.NodeProvider
+	podProvider            *p.PodProvider
+	deploymentProvider     *p.DeploymentProvider
+	serviceProvider        *p.ServiceProvider
+    kubeconfig 			   *string
 )
 
 func initWidgets() {
 	exampleParagraphWidget = w.NewExampleParagraph()
-	nodeListWidget = w.NewNodeListWidget(nodeObserver)
-	podListWidget = w.NewKubernetesPods(podObserver)
+	nodeListWidget = w.NewNodeListWidget(nodeProvider)
+	podListWidget = w.NewKubernetesPods(podProvider)
 	summaryWidget = w.NewSummaryWidget(
-										nodeObserver,
-										podObserver,
-										deploymentObserver,
-										serviceObserver,
+										nodeProvider,
+										podProvider,
+										deploymentProvider,
+										serviceProvider,
 										)
 }
 
 func initObservers() {
-	nodeObserver = p.NewNodeObserver(k8sClientSet)
-	podObserver = p.NewPodObserver(k8sClientSet)
-	deploymentObserver = p.NewDeploymentObserver(k8sClientSet)
-	serviceObserver = p.NewServiceObserver(k8sClientSet)
+	clientSet := newClientSet()
+	podProvider = p.NewPodProvider(clientSet)
+	deploymentProvider = p.NewDeploymentProvider(clientSet)
+	nodeProvider = p.NewNodeProvider(clientSet)
+	serviceProvider = p.NewServiceProvider(clientSet)
 }
 
 func setupGrid() {
@@ -94,28 +96,10 @@ func eventLoop() {
 }
 
 func main() {
-
-	var kubeconfig *string
-	if home := homedir.HomeDir(); home != "" {
-		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
-	} else {
-		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
-	}
-	flag.Parse()
-
-	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
-	if err != nil {
-		panic(err)
-	}
-	k8sClientSet, err = kubernetes.NewForConfig(config)
-	if err != nil {
-		panic(err)
-	}
-
+	parseFlags()
 	if err := ui.Init(); err != nil {
 		log.Fatalf("failed to initialize termui: %v", err)
 	}
-
 	defer ui.Close()
 	initObservers()
 	initWidgets()
@@ -124,4 +108,25 @@ func main() {
 	grid.SetRect(0, 0, termWidth, termHeight)
 	ui.Render(grid)
 	eventLoop()
+}
+
+func parseFlags() {
+	if home := homedir.HomeDir(); home != "" {
+		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
+	} else {
+		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
+	}
+	flag.Parse()
+}
+
+func newClientSet() *kubernetes.Clientset {
+	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	if err != nil {
+		panic(err)
+	}
+	k8s, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		panic(err)
+	}
+	return k8s
 }

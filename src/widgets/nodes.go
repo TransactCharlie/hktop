@@ -14,13 +14,16 @@ type NodeListWidget struct {
 	stop chan bool
 }
 
-func NewNodeListWidget(observer *p.WatchObserver) *NodeListWidget {
+func NewNodeListWidget(np *p.NodeProvider) *NodeListWidget {
 	nlw := &NodeListWidget{
 		List: ui.NewList(),
-		Events: observer.RegisterObserver(),
+		Events: np.NodeObserver.RegisterObserver(),
 		stop: make(chan bool),
 	}
 	nlw.Rows = []string{}
+	for _, node := range(np.InitialNodes) {
+		nlw.Rows = append(nlw.Rows, node.Name)
+	}
 	nlw.Title = "K8S Nodes"
 	nlw.Run()
 	return nlw

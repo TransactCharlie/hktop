@@ -15,15 +15,17 @@ type KubernetesPods struct {
 	stop chan bool
 }
 
-func NewKubernetesPods(observer *p.WatchObserver) *KubernetesPods {
+func NewKubernetesPods(pp *p.PodProvider) *KubernetesPods {
 	kn := &KubernetesPods{
 		List:       ui.NewList(),
-		Events: observer.RegisterObserver(),
+		Events: pp.PodObserver.RegisterObserver(),
 		stop:       make(chan bool),
 	}
 	kn.Rows = []string{}
+	for _, pod := range pp.InitialPods {
+		kn.Rows = append(kn.Rows, pod.Name)
+	}
 	kn.Title = "K8S Pods"
-	go func() { _ = kn.Update() }()
 	kn.Run()
 	return kn
 }

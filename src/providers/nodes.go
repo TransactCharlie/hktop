@@ -1,6 +1,7 @@
 package providers
 
 import (
+	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/watch"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"github.com/imkira/go-observer"
@@ -8,9 +9,21 @@ import (
 	"log"
 )
 
-// New Node Observer
-func NewNodeObserver(k8s *kubernetes.Clientset) *WatchObserver {
-	watcher, err := k8s.CoreV1().Nodes().Watch(metav1.ListOptions{})
+type NodeProvider struct {
+	InitialNodes []v1.Node
+	ResourceVersion string
+	NodeObserver *WatchObserver
+}
+
+// New Node Provider
+func NewNodeProvider(k8s *kubernetes.Clientset) *NodeProvider {
+
+	initialNodes, err := k8s.CoreV1().Nodes().List(metav1.ListOptions{})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	watcher, err := k8s.CoreV1().Nodes().Watch(metav1.ListOptions{ResourceVersion: initialNodes.ListMeta.ResourceVersion})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -20,5 +33,12 @@ func NewNodeObserver(k8s *kubernetes.Clientset) *WatchObserver {
 		EventProperty: observer.NewProperty(watch.Event{}),
 	}
 	no.Run()
-	return no
+
+	np := &NodeProvider{
+		InitialNodes: initialNodes.Items,
+		ResourceVersion: initialNodes.ListMeta.ResourceVersion,
+		NodeObserver: no,
+	}
+
+	return np
 }

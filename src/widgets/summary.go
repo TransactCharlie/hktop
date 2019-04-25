@@ -3,7 +3,7 @@ package widgets
 import (
 	ui "github.com/gizak/termui/v3/widgets"
 	observer "github.com/imkira/go-observer"
-	"github.com/transactcharlie/hktop/src/providers"
+	p "github.com/transactcharlie/hktop/src/providers"
 	"k8s.io/apimachinery/pkg/watch"
 	"fmt"
 )
@@ -21,14 +21,18 @@ type SummaryWidget struct {
 	serviceCount int
 }
 
-func NewSummaryWidget(no, po, do, so *providers.WatchObserver) *SummaryWidget {
+func NewSummaryWidget(np *p.NodeProvider , pp *p.PodProvider, dp *p.DeploymentProvider, sp *p.ServiceProvider) *SummaryWidget {
 	sw := &SummaryWidget{
 		Table: ui.NewTable(),
-		NodeEvents: no.RegisterObserver(),
-		PodEvents: po.RegisterObserver(),
-		DeploymentEvents: do.RegisterObserver(),
-		ServiceEvents: so.RegisterObserver(),
+		NodeEvents: np.NodeObserver.RegisterObserver(),
+		PodEvents: pp.PodObserver.RegisterObserver(),
+		DeploymentEvents: dp.DeploymentObserver.RegisterObserver(),
+		ServiceEvents: sp.ServiceObserver.RegisterObserver(),
 		stop: make(chan bool),
+		nodeCount: len(np.InitialNodes),
+		podCount: len(pp.InitialPods),
+		deploymentCount: len(dp.InitialDeployments),
+		serviceCount: len(sp.InitialServices),
 	}
 	sw.Rows = [][]string{
 		{"Nodes", ""},
@@ -39,6 +43,7 @@ func NewSummaryWidget(no, po, do, so *providers.WatchObserver) *SummaryWidget {
 	sw.Title = "Summary"
 	sw.RowSeparator = false
 	sw.Run()
+	go func(){_ = sw.Update()}()
 	return sw
 }
 
