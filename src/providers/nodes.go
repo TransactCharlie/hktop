@@ -8,19 +8,16 @@ import (
 	"log"
 )
 
-// Creates a (running) new NodeObserver with an initialised k8s node watch
-func NewNodeObserver(clientset *kubernetes.Clientset) *WatchObserver {
-	watcher, err := clientset.CoreV1().Nodes().Watch(metav1.ListOptions{})
+// New Node Observer
+func NewNodeObserver(k8s *kubernetes.Clientset) *WatchObserver {
+	watcher, err := k8s.CoreV1().Nodes().Watch(metav1.ListOptions{})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Create a property to base observers on
-	prop := observer.NewProperty(watch.Event{})
-
 	no := &WatchObserver{
 		EventChannel: watcher.ResultChan(),
-		EventProperty: prop,
+		EventProperty: observer.NewProperty(watch.Event{}),
 	}
 	no.Run()
 	return no

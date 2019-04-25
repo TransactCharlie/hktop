@@ -8,51 +8,50 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 )
 
-type KubernetesNodes struct {
+type NodeListWidget struct {
 	*ui.List
 	Events observer.Stream
 	stop chan bool
 }
 
-func NewKubernetesNode(observer *p.WatchObserver) *KubernetesNodes {
-	kn := &KubernetesNodes{
+func NewNodeListWidget(observer *p.WatchObserver) *NodeListWidget {
+	nlw := &NodeListWidget{
 		List: ui.NewList(),
 		Events: observer.RegisterObserver(),
 		stop: make(chan bool),
 	}
-	kn.Rows = []string{}
-	kn.Title = "K8S Nodes"
-	go func() {_ = kn.Update()}()
-	kn.Run()
-	return kn
+	nlw.Rows = []string{}
+	nlw.Title = "K8S Nodes"
+	nlw.Run()
+	return nlw
 }
 
-func (kn *KubernetesNodes) Run() {
+func (nlw *NodeListWidget) Run() {
 	go func() {
 		for {
 			select {
-			case <- kn.stop:
+			case <- nlw.stop:
 				return
 			// Deal with a change
-			case <- kn.Events.Changes():
+			case <- nlw.Events.Changes():
 				// advance to new value
-				kn.Events.Next()
-				event := kn.Events.Value().(watch.Event)
+				nlw.Events.Next()
+				event := nlw.Events.Value().(watch.Event)
 				node, _ := event.Object.(*v1.Node)
 				switch event.Type {
 				case watch.Added:
-					kn.Rows = append(kn.Rows, node.Name)
+					nlw.Rows = append(nlw.Rows, node.Name)
 				}
 			}
 		}
 	}()
 }
 
-func (kn *KubernetesNodes) Stop() bool {
-	kn.stop <- true
+func (nlw *NodeListWidget) Stop() bool {
+	nlw.stop <- true
 	return true
 }
 
-func (kn *KubernetesNodes) Update() error {
+func (nlw *NodeListWidget) Update() error {
 	return nil
 }

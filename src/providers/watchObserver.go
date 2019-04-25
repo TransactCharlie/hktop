@@ -3,7 +3,6 @@ package providers
 import (
 	"k8s.io/apimachinery/pkg/watch"
 	"github.com/imkira/go-observer"
-
 )
 
 type WatchObserver struct {
@@ -13,27 +12,27 @@ type WatchObserver struct {
 }
 
 // Register a new Observer
-func (no *WatchObserver) RegisterObserver() observer.Stream {
-	return no.EventProperty.Observe()
+func (wo *WatchObserver) RegisterObserver() observer.Stream {
+	return wo.EventProperty.Observe()
 }
 
 // Runs the nodeObserver processing the watch for nodes and
 // publishing events to observers
-func (no *WatchObserver) Run() {
+func (wo *WatchObserver) Run() {
 	go func() {
 		for {
 			select {
-			case <-no.stop:
+			case <-wo.stop:
 				return
-			case event := <-no.EventChannel:
-				no.EventProperty.Update(event)
+			case event := <-wo.EventChannel:
+				wo.EventProperty.Update(event)
 			}
 		}
 	}()
 }
 
 // Stops the Observer
-func (no *WatchObserver) Stop() bool {
-	no.stop <- true
+func (wo *WatchObserver) Stop() bool {
+	wo.stop <- true
 	return true
 }

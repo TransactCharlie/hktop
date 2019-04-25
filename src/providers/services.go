@@ -8,9 +8,9 @@ import (
 	"log"
 )
 
-// Creates a (running) new NodeObserver with an initialised k8s pod watch
-func NewPodObserver(clientset *kubernetes.Clientset) *WatchObserver {
-	watcher, err := clientset.CoreV1().Pods("").Watch(metav1.ListOptions{Watch:true})
+// New Deployments Observer
+func NewServiceObserver(k8s *kubernetes.Clientset) *WatchObserver {
+	watcher, err := k8s.CoreV1().Services("").Watch(metav1.ListOptions{})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -18,10 +18,10 @@ func NewPodObserver(clientset *kubernetes.Clientset) *WatchObserver {
 	// Create a property to base observers on
 	prop := observer.NewProperty(watch.Event{})
 
-	podObserver := &WatchObserver{
+	wo := &WatchObserver{
 		EventChannel: watcher.ResultChan(),
 		EventProperty: prop,
 	}
-	podObserver.Run()
-	return podObserver
+	wo.Run()
+	return wo
 }

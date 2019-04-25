@@ -10,42 +10,56 @@ import (
 	"time"
 
 	ui "github.com/gizak/termui/v3"
+	p "github.com/transactcharlie/hktop/src/providers"
 	w "github.com/transactcharlie/hktop/src/widgets"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
-	p "github.com/transactcharlie/hktop/src/providers"
 )
 
 var (
 	grid                   *ui.Grid
 	exampleParagraphWidget w.K8SWidget
-	k8sNodesWidget         w.K8SWidget
-	k8sPodsWidget          w.K8SWidget
-	updateInterval         = time.Second
-	clientset              *kubernetes.Clientset
-	nodeProvider		   *p.WatchObserver
-	podProvider *p.WatchObserver
+	summaryWidget          w.K8SWidget
+	nodeListWidget         w.K8SWidget
+	podListWidget          w.K8SWidget
+	updateInterval         time.Duration = time.Second
+	k8sClientSet           *kubernetes.Clientset
+	nodeObserver           *p.WatchObserver
+	podObserver            *p.WatchObserver
+	deploymentObserver     *p.WatchObserver
+	serviceObserver        *p.WatchObserver
 )
 
 func initWidgets() {
 	exampleParagraphWidget = w.NewExampleParagraph()
-	k8sNodesWidget = w.NewKubernetesNode(nodeProvider)
-	k8sPodsWidget = w.NewKubernetesPods(podProvider)
+	nodeListWidget = w.NewNodeListWidget(nodeObserver)
+	podListWidget = w.NewKubernetesPods(podObserver)
+	summaryWidget = w.NewSummaryWidget(
+										nodeObserver,
+										podObserver,
+										deploymentObserver,
+										serviceObserver,
+										)
 }
 
-func initProviders() {
-	nodeProvider = p.NewNodeObserver(clientset)
-	podProvider = p.NewPodObserver(clientset)
+func initObservers() {
+	nodeObserver = p.NewNodeObserver(k8sClientSet)
+	podObserver = p.NewPodObserver(k8sClientSet)
+	deploymentObserver = p.NewDeploymentObserver(k8sClientSet)
+	serviceObserver = p.NewServiceObserver(k8sClientSet)
 }
 
 func setupGrid() {
 	grid = ui.NewGrid()
 	grid.Set(
-		ui.NewRow(0.5/2, exampleParagraphWidget),
-		ui.NewRow(1.5/2,
-			ui.NewCol(1.0/2, k8sNodesWidget),
-			ui.NewCol(1.0/2, k8sPodsWidget),
+		ui.NewRow(0.25,
+			ui.NewCol(0.2, summaryWidget),
+			ui.NewCol(0.8, exampleParagraphWidget),
+		),
+		ui.NewRow(0.75,
+			ui.NewCol(0.4, nodeListWidget),
+			ui.NewCol(0.6, podListWidget),
 		),
 	)
 }
@@ -93,7 +107,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	clientset, err = kubernetes.NewForConfig(config)
+	k8sClientSet, err = kubernetes.NewForConfig(config)
 	if err != nil {
 		panic(err)
 	}
@@ -103,7 +117,7 @@ func main() {
 	}
 
 	defer ui.Close()
-	initProviders()
+	initObservers()
 	initWidgets()
 	setupGrid()
 	termWidth, termHeight := ui.TerminalDimensions()
