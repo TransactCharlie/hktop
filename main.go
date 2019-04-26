@@ -23,6 +23,7 @@ var (
 	summaryWidget            w.K8SWidget
 	nodeListWidget           w.K8SWidget
 	podListWidget            w.K8SWidget
+	podsPerNamespaceWidget   w.K8SWidget
 	updateInterval           = time.Second
 	nodeProvider             *p.NodeProvider
 	podProvider              *p.PodProvider
@@ -39,6 +40,7 @@ func initWidgets() {
 	exampleParagraphWidget = w.NewExampleParagraph()
 	nodeListWidget = w.NewNodeListWidget(nodeProvider)
 	podListWidget = w.NewKubernetesPods(podProvider)
+	podsPerNamespaceWidget = w.NewPodsPerNamespaceWidget(podProvider)
 	summaryWidget = w.NewSummaryWidget(nodeProvider,
 		podProvider,
 		deploymentProvider,
@@ -71,7 +73,10 @@ func setupGrid() {
 		),
 		ui.NewRow(0.75,
 			ui.NewCol(0.4, nodeListWidget),
-			ui.NewCol(0.6, podListWidget),
+			ui.NewCol(0.6,
+				ui.NewRow(0.75, podListWidget),
+				ui.NewRow(0.25, podsPerNamespaceWidget),
+			),
 		),
 	)
 }
