@@ -9,27 +9,29 @@ import (
 	"log"
 )
 
-type DeploymentProvider struct {
-	InitialDeployments []v1beta1.Deployment
-	ResourceVersion    string
-	DeploymentObserver *WatchObserver
+type DaemonSetProvider struct {
+	InitialDaemonSets []v1beta1.DaemonSet
+	ResourceVersion   string
+	Observer          *WatchObserver
 }
 
-// New Deployments Provider
-func NewDeploymentProvider(k8s *kubernetes.Clientset) *DeploymentProvider {
-	initial, err := k8s.ExtensionsV1beta1().Deployments("").List(metav1.ListOptions{})
+// New DaemonSet Provider
+func NewDaemonSetProvider(k8s *kubernetes.Clientset) *DaemonSetProvider {
+	initial, err := k8s.ExtensionsV1beta1().
+		DaemonSets("").
+		List(metav1.ListOptions{})
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	dp := &DeploymentProvider{
-		InitialDeployments: initial.Items,
-		ResourceVersion:    initial.ResourceVersion,
+	dp := &DaemonSetProvider{
+		InitialDaemonSets: initial.Items,
+		ResourceVersion:   initial.ResourceVersion,
 	}
 
 	watcher, err := k8s.ExtensionsV1beta1().
-		Deployments("").
+		DaemonSets("").
 		Watch(metav1.ListOptions{ResourceVersion: dp.ResourceVersion})
 
 	if err != nil {
@@ -45,6 +47,6 @@ func NewDeploymentProvider(k8s *kubernetes.Clientset) *DeploymentProvider {
 	}
 	wo.Run()
 
-	dp.DeploymentObserver = wo
+	dp.Observer = wo
 	return dp
 }

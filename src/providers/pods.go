@@ -1,20 +1,19 @@
 package providers
 
 import (
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/watch"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"github.com/imkira/go-observer"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"log"
 )
 
 type PodProvider struct {
-	InitialPods []v1.Pod
+	InitialPods     []v1.Pod
 	ResourceVersion string
-	PodObserver *WatchObserver
+	PodObserver     *WatchObserver
 }
-
 
 // Creates a (running) PodProvider with an initialised k8s pod watch and list
 func NewPodProvider(k8s *kubernetes.Clientset) *PodProvider {
@@ -25,10 +24,9 @@ func NewPodProvider(k8s *kubernetes.Clientset) *PodProvider {
 	}
 
 	pp := &PodProvider{
-		InitialPods:initialPods.Items,
-		ResourceVersion:initialPods.ResourceVersion,
+		InitialPods:     initialPods.Items,
+		ResourceVersion: initialPods.ResourceVersion,
 	}
-
 
 	watcher, err := k8s.CoreV1().Pods("").Watch(metav1.ListOptions{ResourceVersion: pp.ResourceVersion})
 	if err != nil {
@@ -39,7 +37,7 @@ func NewPodProvider(k8s *kubernetes.Clientset) *PodProvider {
 	prop := observer.NewProperty(watch.Event{})
 
 	podObserver := &WatchObserver{
-		EventChannel: watcher.ResultChan(),
+		EventChannel:  watcher.ResultChan(),
 		EventProperty: prop,
 	}
 	podObserver.Run()

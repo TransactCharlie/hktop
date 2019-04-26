@@ -1,18 +1,18 @@
 package providers
 
 import (
-	"k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/watch"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"github.com/imkira/go-observer"
+	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"log"
 )
 
 type NodeProvider struct {
-	InitialNodes []v1.Node
+	InitialNodes    []v1.Node
 	ResourceVersion string
-	NodeObserver *WatchObserver
+	NodeObserver    *WatchObserver
 }
 
 // New Node Provider
@@ -29,15 +29,15 @@ func NewNodeProvider(k8s *kubernetes.Clientset) *NodeProvider {
 	}
 
 	no := &WatchObserver{
-		EventChannel: watcher.ResultChan(),
+		EventChannel:  watcher.ResultChan(),
 		EventProperty: observer.NewProperty(watch.Event{}),
 	}
 	no.Run()
 
 	np := &NodeProvider{
-		InitialNodes: initialNodes.Items,
+		InitialNodes:    initialNodes.Items,
 		ResourceVersion: initialNodes.ListMeta.ResourceVersion,
-		NodeObserver: no,
+		NodeObserver:    no,
 	}
 
 	return np

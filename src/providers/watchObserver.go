@@ -1,13 +1,13 @@
 package providers
 
 import (
-	"k8s.io/apimachinery/pkg/watch"
 	"github.com/imkira/go-observer"
+	"k8s.io/apimachinery/pkg/watch"
 )
 
 type WatchObserver struct {
-	stop chan bool
-	EventChannel <-chan watch.Event
+	stop          chan bool
+	EventChannel  <-chan watch.Event
 	EventProperty observer.Property
 }
 

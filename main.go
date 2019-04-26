@@ -18,30 +18,36 @@ import (
 )
 
 var (
-	grid                   *ui.Grid
-	exampleParagraphWidget w.K8SWidget
-	summaryWidget          w.K8SWidget
-	nodeListWidget         w.K8SWidget
-	podListWidget          w.K8SWidget
-	updateInterval         time.Duration = time.Second
-	// k8sClientSet           *kubernetes.Clientset
-	nodeProvider           *p.NodeProvider
-	podProvider            *p.PodProvider
-	deploymentProvider     *p.DeploymentProvider
-	serviceProvider        *p.ServiceProvider
-    kubeconfig 			   *string
+	grid                     *ui.Grid
+	exampleParagraphWidget   w.K8SWidget
+	summaryWidget            w.K8SWidget
+	nodeListWidget           w.K8SWidget
+	podListWidget            w.K8SWidget
+	updateInterval           = time.Second
+	nodeProvider             *p.NodeProvider
+	podProvider              *p.PodProvider
+	deploymentProvider       *p.DeploymentProvider
+	serviceProvider          *p.ServiceProvider
+	daemonSetProvider        *p.DaemonSetProvider
+	persistentVolumeProvider *p.PersistentVolumeProvider
+	namespaceProvider        *p.NamespaceProvider
+	statefulSetProvider      *p.StatefulSetProvider
+	kubeconfig               *string
 )
 
 func initWidgets() {
 	exampleParagraphWidget = w.NewExampleParagraph()
 	nodeListWidget = w.NewNodeListWidget(nodeProvider)
 	podListWidget = w.NewKubernetesPods(podProvider)
-	summaryWidget = w.NewSummaryWidget(
-										nodeProvider,
-										podProvider,
-										deploymentProvider,
-										serviceProvider,
-										)
+	summaryWidget = w.NewSummaryWidget(nodeProvider,
+		podProvider,
+		deploymentProvider,
+		serviceProvider,
+		daemonSetProvider,
+		persistentVolumeProvider,
+		namespaceProvider,
+		statefulSetProvider,
+	)
 }
 
 func initObservers() {
@@ -50,14 +56,18 @@ func initObservers() {
 	deploymentProvider = p.NewDeploymentProvider(clientSet)
 	nodeProvider = p.NewNodeProvider(clientSet)
 	serviceProvider = p.NewServiceProvider(clientSet)
+	daemonSetProvider = p.NewDaemonSetProvider(clientSet)
+	persistentVolumeProvider = p.NewPersistentVolumeProvider(clientSet)
+	namespaceProvider = p.NewNamespaceProvider(clientSet)
+	statefulSetProvider = p.NewStatefulSetProvider(clientSet)
 }
 
 func setupGrid() {
 	grid = ui.NewGrid()
 	grid.Set(
 		ui.NewRow(0.25,
-			ui.NewCol(0.2, summaryWidget),
-			ui.NewCol(0.8, exampleParagraphWidget),
+			ui.NewCol(0.34, summaryWidget),
+			ui.NewCol(0.66, exampleParagraphWidget),
 		),
 		ui.NewRow(0.75,
 			ui.NewCol(0.4, nodeListWidget),

@@ -1,10 +1,10 @@
 package providers
 
 import (
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/watch"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"github.com/imkira/go-observer"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
 	"log"
 )
@@ -30,7 +30,7 @@ func NewServiceProvider(k8s *kubernetes.Clientset) *ServiceProvider {
 	// Watch Services
 	watcher, err := k8s.CoreV1().
 		Services("").
-		Watch(metav1.ListOptions{ResourceVersion:sp.ResourceVersion})
+		Watch(metav1.ListOptions{ResourceVersion: sp.ResourceVersion})
 
 	if err != nil {
 		log.Fatal(err)
@@ -40,7 +40,7 @@ func NewServiceProvider(k8s *kubernetes.Clientset) *ServiceProvider {
 	prop := observer.NewProperty(watch.Event{})
 
 	wo := &WatchObserver{
-		EventChannel: watcher.ResultChan(),
+		EventChannel:  watcher.ResultChan(),
 		EventProperty: prop,
 	}
 	wo.Run()

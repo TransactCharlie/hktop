@@ -11,17 +11,17 @@ import (
 type NodeListWidget struct {
 	*ui.List
 	Events observer.Stream
-	stop chan bool
+	stop   chan bool
 }
 
 func NewNodeListWidget(np *p.NodeProvider) *NodeListWidget {
 	nlw := &NodeListWidget{
-		List: ui.NewList(),
+		List:   ui.NewList(),
 		Events: np.NodeObserver.RegisterObserver(),
-		stop: make(chan bool),
+		stop:   make(chan bool),
 	}
 	nlw.Rows = []string{}
-	for _, node := range(np.InitialNodes) {
+	for _, node := range np.InitialNodes {
 		nlw.Rows = append(nlw.Rows, node.Name)
 	}
 	nlw.Title = "K8S Nodes"
@@ -33,10 +33,10 @@ func (nlw *NodeListWidget) Run() {
 	go func() {
 		for {
 			select {
-			case <- nlw.stop:
+			case <-nlw.stop:
 				return
 			// Deal with a change
-			case <- nlw.Events.Changes():
+			case <-nlw.Events.Changes():
 				// advance to new value
 				nlw.Events.Next()
 				event := nlw.Events.Value().(watch.Event)

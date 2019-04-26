@@ -8,18 +8,17 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 )
 
-
 type KubernetesPods struct {
 	*ui.List
 	Events observer.Stream
-	stop chan bool
+	stop   chan bool
 }
 
 func NewKubernetesPods(pp *p.PodProvider) *KubernetesPods {
 	kn := &KubernetesPods{
-		List:       ui.NewList(),
+		List:   ui.NewList(),
 		Events: pp.PodObserver.RegisterObserver(),
-		stop:       make(chan bool),
+		stop:   make(chan bool),
 	}
 	kn.Rows = []string{}
 	for _, pod := range pp.InitialPods {
@@ -36,7 +35,7 @@ func (kn *KubernetesPods) Run() {
 			select {
 			case <-kn.stop:
 				return
-			case <- kn.Events.Changes():
+			case <-kn.Events.Changes():
 				kn.Events.Next()
 				event := kn.Events.Value().(watch.Event)
 				pod, _ := event.Object.(*v1.Pod)
