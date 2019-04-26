@@ -2,6 +2,7 @@ package widgets
 
 import (
 	"fmt"
+	"github.com/gizak/termui/v3"
 	ui "github.com/gizak/termui/v3/widgets"
 	observer "github.com/imkira/go-observer"
 	p "github.com/transactcharlie/hktop/src/providers"
@@ -67,6 +68,22 @@ func NewSummaryWidget(np *p.NodeProvider,
 		{"Persistent Volumes", ""},
 		{"Namespaces", ""},
 		{"Stateful Sets", ""},
+	}
+	sw.FillRow = false
+	sw.TextAlignment = termui.AlignLeft
+	sw.ColumnResizer = func() {
+		width := sw.Inner.Dx()
+		countWidth := 0
+		for _, r := range sw.Rows {
+			if len(r[1]) > countWidth {
+				countWidth = len(r[1])
+			}
+		}
+		// pad countwidth
+		countWidth += 2
+		textWidth := width - countWidth
+		sw.ColumnWidths = []int{textWidth, countWidth}
+		return
 	}
 	sw.Title = "Summary"
 	sw.RowSeparator = false

@@ -40,7 +40,7 @@ func initWidgets() {
 	exampleParagraphWidget = w.NewExampleParagraph()
 	nodeListWidget = w.NewNodeListWidget(nodeProvider)
 	podListWidget = w.NewKubernetesPods(podProvider)
-	podsPerNamespaceWidget = w.NewPodsPerNamespaceWidget(podProvider)
+	podsPerNamespaceWidget = w.NewPodsPerNamespaceWidget(podProvider, namespaceProvider)
 	summaryWidget = w.NewSummaryWidget(nodeProvider,
 		podProvider,
 		deploymentProvider,
@@ -74,8 +74,8 @@ func setupGrid() {
 		ui.NewRow(0.75,
 			ui.NewCol(0.4, nodeListWidget),
 			ui.NewCol(0.6,
-				ui.NewRow(0.75, podListWidget),
-				ui.NewRow(0.25, podsPerNamespaceWidget),
+				ui.NewRow(0.60, podListWidget),
+				ui.NewRow(0.40, podsPerNamespaceWidget),
 			),
 		),
 	)
