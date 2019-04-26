@@ -17,7 +17,7 @@ type NodeListWidget struct {
 func NewNodeListWidget(np *p.NodeProvider) *NodeListWidget {
 	nlw := &NodeListWidget{
 		List:   ui.NewList(),
-		Events: np.NodeObserver.RegisterObserver(),
+		Events: np.Observer.RegisterObserver(),
 		stop:   make(chan bool),
 	}
 	nlw.Rows = []string{}

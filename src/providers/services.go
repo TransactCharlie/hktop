@@ -12,7 +12,7 @@ import (
 type ServiceProvider struct {
 	InitialServices []v1.Service
 	ResourceVersion string
-	ServiceObserver *WatchObserver
+	Observer        *WatchObserver
 }
 
 // New Service Provider
@@ -45,6 +45,6 @@ func NewServiceProvider(k8s *kubernetes.Clientset) *ServiceProvider {
 	}
 	wo.Run()
 
-	sp.ServiceObserver = wo
+	sp.Observer = wo
 	return sp
 }

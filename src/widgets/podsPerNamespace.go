@@ -21,7 +21,7 @@ type PodsPerNamespaceWidget struct {
 func NewPodsPerNamespaceWidget(pp *p.PodProvider, nsp *p.NamespaceProvider) *PodsPerNamespaceWidget {
 	w := &PodsPerNamespaceWidget{
 		PieChart:         ui.NewPieChart(),
-		PodEvents:        pp.PodObserver.RegisterObserver(),
+		PodEvents:        pp.Observer.RegisterObserver(),
 		NamespaceEvents:  nsp.Observer.RegisterObserver(),
 		stop:             make(chan bool),
 		namespacePods:    make(map[string]map[string]v1.Pod),

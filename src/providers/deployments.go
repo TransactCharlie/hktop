@@ -12,7 +12,7 @@ import (
 type DeploymentProvider struct {
 	InitialDeployments []v1beta1.Deployment
 	ResourceVersion    string
-	DeploymentObserver *WatchObserver
+	Observer           *WatchObserver
 }
 
 // New Deployments Provider
@@ -45,6 +45,6 @@ func NewDeploymentProvider(k8s *kubernetes.Clientset) *DeploymentProvider {
 	}
 	wo.Run()
 
-	dp.DeploymentObserver = wo
+	dp.Observer = wo
 	return dp
 }

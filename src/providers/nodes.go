@@ -12,7 +12,7 @@ import (
 type NodeProvider struct {
 	InitialNodes    []v1.Node
 	ResourceVersion string
-	NodeObserver    *WatchObserver
+	Observer        *WatchObserver
 }
 
 // New Node Provider
@@ -37,7 +37,7 @@ func NewNodeProvider(k8s *kubernetes.Clientset) *NodeProvider {
 	np := &NodeProvider{
 		InitialNodes:    initialNodes.Items,
 		ResourceVersion: initialNodes.ListMeta.ResourceVersion,
-		NodeObserver:    no,
+		Observer:        no,
 	}
 
 	return np

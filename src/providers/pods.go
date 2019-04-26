@@ -12,7 +12,7 @@ import (
 type PodProvider struct {
 	InitialPods     []v1.Pod
 	ResourceVersion string
-	PodObserver     *WatchObserver
+	Observer        *WatchObserver
 }
 
 // Creates a (running) PodProvider with an initialised k8s pod watch and list
@@ -42,6 +42,6 @@ func NewPodProvider(k8s *kubernetes.Clientset) *PodProvider {
 	}
 	podObserver.Run()
 
-	pp.PodObserver = podObserver
+	pp.Observer = podObserver
 	return pp
 }

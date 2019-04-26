@@ -17,7 +17,7 @@ type KubernetesPods struct {
 func NewKubernetesPods(pp *p.PodProvider) *KubernetesPods {
 	kn := &KubernetesPods{
 		List:   ui.NewList(),
-		Events: pp.PodObserver.RegisterObserver(),
+		Events: pp.Observer.RegisterObserver(),
 		stop:   make(chan bool),
 	}
 	kn.Rows = []string{}
