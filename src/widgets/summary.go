@@ -15,56 +15,41 @@ type SummaryWidget struct {
 	PodEvents              observer.Stream
 	DeploymentEvents       observer.Stream
 	ServiceEvents          observer.Stream
-	DaemonSetEvents        observer.Stream
 	PersistentVolumeEvents observer.Stream
 	NamespaceEvents        observer.Stream
-	StatefulSetEvents      observer.Stream
 	stop                   chan bool
 	nodeCount              int
 	podCount               int
 	deploymentCount        int
 	serviceCount           int
-	daemonSetCount         int
 	persistentVolumeCount  int
 	namespaceCount         int
-	statefulSetCount       int
 }
 
 func NewSummaryWidget(np *p.NodeProvider,
-	pp *p.PodProvider,
 	dp *p.DeploymentProvider,
 	sp *p.ServiceProvider,
-	dsp *p.DaemonSetProvider,
 	pvp *p.PersistentVolumeProvider,
 	nsp *p.NamespaceProvider,
-	ssp *p.StatefulSetProvider,
 ) *SummaryWidget {
 	sw := &SummaryWidget{
 		Table:                  ui.NewTable(),
 		NodeEvents:             np.Observer.RegisterObserver(),
-		PodEvents:              pp.Observer.RegisterObserver(),
 		DeploymentEvents:       dp.Observer.RegisterObserver(),
 		ServiceEvents:          sp.Observer.RegisterObserver(),
-		DaemonSetEvents:        dsp.Observer.RegisterObserver(),
 		PersistentVolumeEvents: pvp.Observer.RegisterObserver(),
 		NamespaceEvents:        nsp.Observer.RegisterObserver(),
-		StatefulSetEvents:      ssp.Observer.RegisterObserver(),
 		stop:                   make(chan bool),
 		nodeCount:              len(np.InitialNodes),
-		podCount:               len(pp.InitialPods),
 		deploymentCount:        len(dp.InitialDeployments),
 		serviceCount:           len(sp.InitialServices),
-		daemonSetCount:         len(dsp.InitialDaemonSets),
 		persistentVolumeCount:  len(pvp.InitialPersistentVolumes),
 		namespaceCount:         len(nsp.InitialNamespaces),
-		statefulSetCount:       len(ssp.InitialStatefulSets),
 	}
 	sw.Rows = [][]string{
 		{"Nodes", ""},
-		{"Pods", ""},
 		{"Deployments", ""},
 		{"Services", ""},
-		{"Daemon Sets", ""},
 		{"Persistent Volumes", ""},
 		{"Namespaces", ""},
 		{"Stateful Sets", ""},
@@ -99,13 +84,10 @@ func (sw *SummaryWidget) Stop() bool {
 
 func (sw *SummaryWidget) Update() error {
 	sw.Rows[0][1] = fmt.Sprintf("%v", sw.nodeCount)
-	sw.Rows[1][1] = fmt.Sprintf("%v", sw.podCount)
-	sw.Rows[2][1] = fmt.Sprintf("%v", sw.deploymentCount)
-	sw.Rows[3][1] = fmt.Sprintf("%v", sw.serviceCount)
-	sw.Rows[4][1] = fmt.Sprintf("%v", sw.daemonSetCount)
-	sw.Rows[5][1] = fmt.Sprintf("%v", sw.persistentVolumeCount)
-	sw.Rows[6][1] = fmt.Sprintf("%v", sw.namespaceCount)
-	sw.Rows[7][1] = fmt.Sprintf("%v", sw.statefulSetCount)
+	sw.Rows[1][1] = fmt.Sprintf("%v", sw.deploymentCount)
+	sw.Rows[2][1] = fmt.Sprintf("%v", sw.serviceCount)
+	sw.Rows[4][1] = fmt.Sprintf("%v", sw.persistentVolumeCount)
+	sw.Rows[5][1] = fmt.Sprintf("%v", sw.namespaceCount)
 	return nil
 }
 
@@ -117,14 +99,10 @@ func (sw *SummaryWidget) Run() {
 				return
 			case <-sw.NodeEvents.Changes():
 				sw.processNodeChange()
-			case <-sw.PodEvents.Changes():
-				sw.processPodChange()
 			case <-sw.DeploymentEvents.Changes():
 				sw.processDeploymentChange()
 			case <-sw.ServiceEvents.Changes():
 				sw.processServiceChange()
-			case <-sw.DaemonSetEvents.Changes():
-				sw.processDaemonSetChange()
 			case <-sw.PersistentVolumeEvents.Changes():
 				sw.processPersistentVolumeChange()
 			case <-sw.NamespaceEvents.Changes():
@@ -182,18 +160,6 @@ func (sw *SummaryWidget) processServiceChange() {
 	_ = sw.Update()
 }
 
-func (sw *SummaryWidget) processDaemonSetChange() {
-	sw.DaemonSetEvents.Next()
-	event := sw.DaemonSetEvents.Value().(watch.Event)
-	switch event.Type {
-	case watch.Added:
-		sw.daemonSetCount += 1
-	case watch.Deleted:
-		sw.daemonSetCount -= 1
-	}
-	_ = sw.Update()
-}
-
 func (sw *SummaryWidget) processPersistentVolumeChange() {
 	sw.PersistentVolumeEvents.Next()
 	event := sw.PersistentVolumeEvents.Value().(watch.Event)
@@ -214,18 +180,6 @@ func (sw *SummaryWidget) processNamespaceChange() {
 		sw.namespaceCount += 1
 	case watch.Deleted:
 		sw.namespaceCount -= 1
-	}
-	_ = sw.Update()
-}
-
-func (sw *SummaryWidget) statefulSetChange() {
-	sw.StatefulSetEvents.Next()
-	event := sw.StatefulSetEvents.Value().(watch.Event)
-	switch event.Type {
-	case watch.Added:
-		sw.statefulSetCount += 1
-	case watch.Deleted:
-		sw.statefulSetCount -= 1
 	}
 	_ = sw.Update()
 }

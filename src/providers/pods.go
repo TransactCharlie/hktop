@@ -1,6 +1,7 @@
 package providers
 
 import (
+	"context"
 	"github.com/imkira/go-observer"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -17,8 +18,8 @@ type PodProvider struct {
 
 // Creates a (running) PodProvider with an initialised k8s pod watch and list
 func NewPodProvider(k8s *kubernetes.Clientset) *PodProvider {
-
-	initialPods, err := k8s.CoreV1().Pods("").List(metav1.ListOptions{})
+	ctx := context.Background()
+	initialPods, err := k8s.CoreV1().Pods("airflow").List(ctx, metav1.ListOptions{})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -28,7 +29,7 @@ func NewPodProvider(k8s *kubernetes.Clientset) *PodProvider {
 		ResourceVersion: initialPods.ResourceVersion,
 	}
 
-	watcher, err := k8s.CoreV1().Pods("").Watch(metav1.ListOptions{ResourceVersion: pp.ResourceVersion})
+	watcher, err := k8s.CoreV1().Pods("").Watch(ctx, metav1.ListOptions{ResourceVersion: pp.ResourceVersion})
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"k8s.io/client-go/util/homedir"
 	"log"
 	"os"
@@ -14,54 +15,57 @@ import (
 	p "github.com/transactcharlie/hktop/src/providers"
 	w "github.com/transactcharlie/hktop/src/widgets"
 	"k8s.io/client-go/kubernetes"
+	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
+	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
 var (
-	grid                     *ui.Grid
-	exampleParagraphWidget   w.K8SWidget
-	summaryWidget            w.K8SWidget
-	nodeListWidget           w.K8SWidget
-	podListWidget            w.K8SWidget
-	podsPerNamespaceWidget   w.K8SWidget
+	grid                   *ui.Grid
+	exampleParagraphWidget w.K8SWidget
+	summaryWidget          w.K8SWidget
+	nodeListWidget         w.K8SWidget
+
 	updateInterval           = time.Second
 	nodeProvider             *p.NodeProvider
-	podProvider              *p.PodProvider
 	deploymentProvider       *p.DeploymentProvider
 	serviceProvider          *p.ServiceProvider
-	daemonSetProvider        *p.DaemonSetProvider
 	persistentVolumeProvider *p.PersistentVolumeProvider
 	namespaceProvider        *p.NamespaceProvider
-	statefulSetProvider      *p.StatefulSetProvider
 	kubeconfig               *string
 )
 
 func initWidgets() {
+	fmt.Println("initWidgets")
 	exampleParagraphWidget = w.NewExampleParagraph()
 	nodeListWidget = w.NewNodeListWidget(nodeProvider)
-	podListWidget = w.NewKubernetesPods(podProvider)
-	podsPerNamespaceWidget = w.NewPodsPerNamespaceWidget(podProvider, namespaceProvider)
 	summaryWidget = w.NewSummaryWidget(nodeProvider,
-		podProvider,
 		deploymentProvider,
 		serviceProvider,
-		daemonSetProvider,
 		persistentVolumeProvider,
 		namespaceProvider,
-		statefulSetProvider,
 	)
 }
 
-func initObservers() {
-	clientSet := newClientSet()
-	podProvider = p.NewPodProvider(clientSet)
+func initObservers(clientSet *kubernetes.Clientset) {
+	//podProvider = p.NewPodProvider(clientSet)
+
+	fmt.Println("deploymentProvider")
 	deploymentProvider = p.NewDeploymentProvider(clientSet)
+
+	fmt.Println("nodeProvider")
 	nodeProvider = p.NewNodeProvider(clientSet)
+
+	fmt.Println("serviceProvider")
 	serviceProvider = p.NewServiceProvider(clientSet)
-	daemonSetProvider = p.NewDaemonSetProvider(clientSet)
+
+	fmt.Println("persistentVolumeProvider")
 	persistentVolumeProvider = p.NewPersistentVolumeProvider(clientSet)
+
+	fmt.Println("namespaceProvider")
 	namespaceProvider = p.NewNamespaceProvider(clientSet)
-	statefulSetProvider = p.NewStatefulSetProvider(clientSet)
+
+	fmt.Println("Finished Setting up observers")
 }
 
 func setupGrid() {
@@ -72,11 +76,7 @@ func setupGrid() {
 			ui.NewCol(0.66, exampleParagraphWidget),
 		),
 		ui.NewRow(0.75,
-			ui.NewCol(0.4, nodeListWidget),
-			ui.NewCol(0.6,
-				ui.NewRow(0.60, podListWidget),
-				ui.NewRow(0.40, podsPerNamespaceWidget),
-			),
+			ui.NewCol(1, nodeListWidget),
 		),
 	)
 }
@@ -112,13 +112,23 @@ func eventLoop() {
 
 func main() {
 	parseFlags()
+	fmt.Println("clientSet")
+	clientSet := newClientSet()
+	fmt.Println(clientSet)
+
+	fmt.Println("observers")
+	initObservers(clientSet)
+
 	if err := ui.Init(); err != nil {
 		log.Fatalf("failed to initialize termui: %v", err)
 	}
 	defer ui.Close()
-	initObservers()
+
+	fmt.Println("widgets")
 	initWidgets()
+	fmt.Println("grid")
 	setupGrid()
+	fmt.Println("term")
 	termWidth, termHeight := ui.TerminalDimensions()
 	grid.SetRect(0, 0, termWidth, termHeight)
 	ui.Render(grid)
@@ -139,6 +149,7 @@ func newClientSet() *kubernetes.Clientset {
 	if err != nil {
 		panic(err)
 	}
+
 	k8s, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		panic(err)

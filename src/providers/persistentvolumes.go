@@ -1,6 +1,7 @@
 package providers
 
 import (
+	"context"
 	"github.com/imkira/go-observer"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -17,9 +18,10 @@ type PersistentVolumeProvider struct {
 
 // New PersistentVolumeProvider
 func NewPersistentVolumeProvider(k8s *kubernetes.Clientset) *PersistentVolumeProvider {
+	ctx := context.Background()
 	initial, err := k8s.CoreV1().
 		PersistentVolumes().
-		List(metav1.ListOptions{})
+		List(ctx, metav1.ListOptions{})
 
 	if err != nil {
 		log.Fatal(err)
@@ -32,7 +34,7 @@ func NewPersistentVolumeProvider(k8s *kubernetes.Clientset) *PersistentVolumePro
 
 	watcher, err := k8s.CoreV1().
 		PersistentVolumes().
-		Watch(metav1.ListOptions{ResourceVersion: pp.ResourceVersion})
+		Watch(ctx, metav1.ListOptions{ResourceVersion: pp.ResourceVersion})
 
 	if err != nil {
 		log.Fatal(err)

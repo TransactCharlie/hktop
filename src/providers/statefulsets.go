@@ -1,6 +1,7 @@
 package providers
 
 import (
+	"context"
 	"github.com/imkira/go-observer"
 	"k8s.io/api/apps/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -17,9 +18,10 @@ type StatefulSetProvider struct {
 
 // New StatefulSetProvider Provider
 func NewStatefulSetProvider(k8s *kubernetes.Clientset) *StatefulSetProvider {
+	ctx := context.Background()
 	initial, err := k8s.AppsV1beta1().
 		StatefulSets("").
-		List(metav1.ListOptions{})
+		List(ctx, metav1.ListOptions{})
 
 	if err != nil {
 		log.Fatal(err)
@@ -32,7 +34,7 @@ func NewStatefulSetProvider(k8s *kubernetes.Clientset) *StatefulSetProvider {
 
 	watcher, err := k8s.AppsV1beta1().
 		StatefulSets("").
-		Watch(metav1.ListOptions{ResourceVersion: provider.ResourceVersion})
+		Watch(ctx, metav1.ListOptions{ResourceVersion: provider.ResourceVersion})
 
 	if err != nil {
 		log.Fatal(err)

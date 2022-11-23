@@ -2,6 +2,7 @@ package providers
 
 import (
 	"github.com/imkira/go-observer"
+	"golang.org/x/net/context"
 	"k8s.io/api/extensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
@@ -17,9 +18,10 @@ type DaemonSetProvider struct {
 
 // New DaemonSet Provider
 func NewDaemonSetProvider(k8s *kubernetes.Clientset) *DaemonSetProvider {
+	ctx := context.Background()
 	initial, err := k8s.ExtensionsV1beta1().
-		DaemonSets("").
-		List(metav1.ListOptions{})
+		DaemonSets("airflow").
+		List(ctx, metav1.ListOptions{})
 
 	if err != nil {
 		log.Fatal(err)
@@ -31,8 +33,8 @@ func NewDaemonSetProvider(k8s *kubernetes.Clientset) *DaemonSetProvider {
 	}
 
 	watcher, err := k8s.ExtensionsV1beta1().
-		DaemonSets("").
-		Watch(metav1.ListOptions{ResourceVersion: dp.ResourceVersion})
+		DaemonSets("airflow").
+		Watch(ctx, metav1.ListOptions{ResourceVersion: dp.ResourceVersion})
 
 	if err != nil {
 		log.Fatal(err)

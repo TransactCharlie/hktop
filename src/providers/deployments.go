@@ -1,8 +1,9 @@
 package providers
 
 import (
+	"context"
 	"github.com/imkira/go-observer"
-	"k8s.io/api/extensions/v1beta1"
+	"k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
@@ -10,14 +11,18 @@ import (
 )
 
 type DeploymentProvider struct {
-	InitialDeployments []v1beta1.Deployment
+	InitialDeployments []v1.Deployment
 	ResourceVersion    string
 	Observer           *WatchObserver
 }
 
 // New Deployments Provider
 func NewDeploymentProvider(k8s *kubernetes.Clientset) *DeploymentProvider {
-	initial, err := k8s.ExtensionsV1beta1().Deployments("").List(metav1.ListOptions{})
+	ctx := context.Background()
+	timeout := int64(60)
+	initial, err := k8s.AppsV1().Deployments("airflow").List(ctx, metav1.ListOptions{
+		TimeoutSeconds: &timeout,
+	})
 
 	if err != nil {
 		log.Fatal(err)
@@ -28,9 +33,9 @@ func NewDeploymentProvider(k8s *kubernetes.Clientset) *DeploymentProvider {
 		ResourceVersion:    initial.ResourceVersion,
 	}
 
-	watcher, err := k8s.ExtensionsV1beta1().
-		Deployments("").
-		Watch(metav1.ListOptions{ResourceVersion: dp.ResourceVersion})
+	watcher, err := k8s.AppsV1().
+		Deployments("airflow").
+		Watch(ctx, metav1.ListOptions{ResourceVersion: dp.ResourceVersion})
 
 	if err != nil {
 		log.Fatal(err)

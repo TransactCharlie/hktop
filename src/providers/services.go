@@ -1,6 +1,7 @@
 package providers
 
 import (
+	"context"
 	"github.com/imkira/go-observer"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -17,8 +18,8 @@ type ServiceProvider struct {
 
 // New Service Provider
 func NewServiceProvider(k8s *kubernetes.Clientset) *ServiceProvider {
-
-	initial, err := k8s.CoreV1().Services("").List(metav1.ListOptions{})
+	ctx := context.Background()
+	initial, err := k8s.CoreV1().Services("").List(ctx, metav1.ListOptions{})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -30,7 +31,7 @@ func NewServiceProvider(k8s *kubernetes.Clientset) *ServiceProvider {
 	// Watch Services
 	watcher, err := k8s.CoreV1().
 		Services("").
-		Watch(metav1.ListOptions{ResourceVersion: sp.ResourceVersion})
+		Watch(ctx, metav1.ListOptions{ResourceVersion: sp.ResourceVersion})
 
 	if err != nil {
 		log.Fatal(err)

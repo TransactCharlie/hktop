@@ -1,6 +1,7 @@
 package providers
 
 import (
+	"context"
 	"github.com/imkira/go-observer"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -17,9 +18,10 @@ type NamespaceProvider struct {
 
 // New PersistentVolume Provider
 func NewNamespaceProvider(k8s *kubernetes.Clientset) *NamespaceProvider {
+	ctx := context.Background()
 	initial, err := k8s.CoreV1().
 		Namespaces().
-		List(metav1.ListOptions{})
+		List(ctx, metav1.ListOptions{})
 
 	if err != nil {
 		log.Fatal(err)
@@ -32,7 +34,7 @@ func NewNamespaceProvider(k8s *kubernetes.Clientset) *NamespaceProvider {
 
 	watcher, err := k8s.CoreV1().
 		Namespaces().
-		Watch(metav1.ListOptions{ResourceVersion: provider.ResourceVersion})
+		Watch(ctx, metav1.ListOptions{ResourceVersion: provider.ResourceVersion})
 
 	if err != nil {
 		log.Fatal(err)
